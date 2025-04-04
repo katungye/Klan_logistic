@@ -4,7 +4,7 @@ const sequelize = new Sequelize({
   storage: './database.sqlite',
 });
 
-// Define the Action model
+
 const Action = sequelize.define('Action', {
   eventId: {
     type: DataTypes.INTEGER,
