@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klan Logistics Events</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Fleet Violation Events</h1>
+  <table id="events-table">
+    <thead>
+      <tr>
+        <th>VCode</th>
+        <th>Violation</th>
+        <th>Beginning Time</th>
+        <th>Initial Location</th>
+        <th>End Time</th>
+        <th>Final Location</th>
+        <th>Value</th>
+        <th>Average Speed</th>
+        <th>Actions Taken</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% events.forEach(event => { %>
+        <tr data-event-id="<%= event.id %>">
+          <td><%= event.attributes.vcode %></td>
+          <td><%= event.attributes.violation %></td>
+          <td><%= event.attributes.beginningtime %></td>
+          <td><%= event.attributes.initiallocation %></td>
+          <td><%= event.attributes.endtime %></td>
+          <td><%= event.attributes.finallocation %></td>
+          <td><%= event.attributes.value %></td>
+          <td><%= event.attributes.averagespeed %></td>
+          <td class="actions-taken"></td>
+          <td><button class="action-btn">Add Action</button></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Modal for Action Form -->
+  <div id="action-modal" style="display:none;">
+    <h2>Add Action Taken</h2>
+    <form id="action-form">
+      <input type="hidden" name="eventId" id="event-id">
+      <label for="recordDate">Record Date:</label>
+      <input type="date" name="recordDate" id="recordDate" required><br><br>
+      
+      <label for="actionDate">Action Date:</label>
+      <input type="date" name="actionDate" id="actionDate" required><br><br>
+      
+      <label for="actionTaken">Action Taken:</label>
+      <input type="text" name="actionTaken" id="actionTaken" required><br><br>
+      
+      <label for="otherRemarks">Other Remarks:</label>
+      <textarea name="otherRemarks" id="otherRemarks"></textarea><br><br>
+      
+      <button type="submit">Save</button>
+      <button type="button" id="close-modal">Close</button>
+    </form>
+  </div>
+
+  <script>
+    // Open modal
+    document.querySelectorAll('.action-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const row = e.target.closest('tr');
+        const eventId = row.getAttribute('data-event-id');
+        document.getElementById('event-id').value = eventId;
+        document.getElementById('action-modal').style.display = 'block';
+      });
+    });
+
+    // Close modal
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('action-modal').style.display = 'none';
+    });
+
+    // Handle form submission
+    document.getElementById('action-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      fetch('/save-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          // Close modal
+          document.getElementById('action-modal').style.display = 'none';
+          // Update table without reloading the page
+          const actionsTakenCell = document.querySelector(`tr[data-event-id="${data.eventId}"] .actions-taken`);
+          actionsTakenCell.textContent = data.actionTaken;
+        } else {
+          alert('Error saving action!');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
