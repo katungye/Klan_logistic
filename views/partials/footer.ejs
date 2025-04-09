@@ -1,0 +1,72 @@
+<!-- jQuery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- DataTables JS -->
+<script src="/lib/datatables/jquery.dataTables.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    $('#events-table').DataTable();
+  });
+
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const eventIdInput = document.getElementById('event-id');
+    const modalElement = document.getElementById('actionModal');
+    const actionForm = document.getElementById('action-form');
+
+    // Add event listeners to action buttons
+    document.querySelectorAll('.action-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const row = e.target.closest('tr');
+        const eventId = row.getAttribute('data-event-id');
+        eventIdInput.value = eventId;
+
+      // optional to reset 
+        actionForm.reset();
+      });
+    });
+
+    // Handle form submission
+    actionForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(actionForm);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      fetch('/save-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          // Update the actions taken cell
+          const actionsTakenCell = document.querySelector(`tr[data-event-id="${data.eventId}"] .actions-taken`);
+          actionsTakenCell.textContent = data.actionTaken;
+
+          // Close modal using Bootstrap API
+          const bootstrapModal = bootstrap.Modal.getInstance(modalElement);
+          bootstrapModal.hide();
+        } else {
+          alert('Error saving action!');
+        }
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        alert('Unexpected error!');
+      });
+    });
+  });
+</script>
+</body>
+</html>
